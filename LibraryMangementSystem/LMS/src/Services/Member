@@ -1,0 +1,105 @@
+package Services;
+
+import DB.DATABASECONNCETION;
+import Models.Member;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MemberService {
+
+    // Method to add a new member
+    public void addMember(Member member) {
+        String sql = "INSERT INTO Members(name, email, phone, address) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DB.DATABASECONNCETION.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, member.getName());
+            stmt.setString(2, member.getEmail());
+            stmt.setString(3, member.getPhone());
+            stmt.setString(4, member.getAddress());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to retrieve all members
+    public List<Member> getAllMembers() {
+        List<Member> members = new ArrayList<>();
+        String sql = "SELECT * FROM Members";
+        try (Connection conn = DB.DATABASECONNCETION.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Member member = new Member(
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("address")
+                );
+                // Optionally set the ID if Member has one
+                member.setId(rs.getInt("member_id"));
+                members.add(member);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return members;
+    }
+
+    // Method to update an existing member
+    public void updateMember(Member member) {
+        String sql = "UPDATE Members SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?";
+        try (Connection conn = DB.DATABASECONNCETION.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, member.getName());
+            stmt.setString(2, member.getEmail());
+            stmt.setString(3, member.getPhone());
+            stmt.setString(4, member.getAddress());
+            stmt.setInt(5, member.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to delete a member by their ID
+    public void deleteMember(int memberId) {
+        String sql = "DELETE FROM Members WHERE member_id = ?";
+        try (Connection conn = DB.DATABASECONNCETION.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, memberId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to search for members by name
+    public List<Member> searchMembersByName(String name) {
+        List<Member> members = new ArrayList<>();
+        String sql = "SELECT * FROM Members WHERE name LIKE ?";
+        try (Connection conn = DB.DATABASECONNCETION.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + name + "%");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Member member = new Member(
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("address")
+                );
+                member.setId(rs.getInt("id"));
+                members.add(member);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return members;
+    }
+}
